@@ -13,9 +13,9 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-    <PackageReference Include="Markdig" Version="0.39.0" />
+    <PackageReference Include="Markdig" Version="0.40.0" />
     <PackageReference Include="Nuke.Common" Version="9.0.3" />
-    <PackageReference Include="Octokit" Version="13.0.1" />
+    <PackageReference Include="Octokit" Version="14.0.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 </Project>
