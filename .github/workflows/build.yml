@@ -16,7 +16,7 @@ permissions:
   packages: write
 jobs:
   Build:
-    runs-on: macos-13-xlarge
+    runs-on: macos-15-xlarge
     steps:
     - uses: actions/checkout@v3.5.2
       with:
