@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClangSharp;
 using Silk.NET.SilkTouch.Clang;
+using Silk.NET.SilkTouch.Logging;
 using Silk.NET.SilkTouch.Mods;
+using Silk.NET.SilkTouch.Utility;
 
 namespace Silk.NET.SilkTouch.Sources;
 
@@ -33,9 +35,11 @@ public interface IInputResolver
     /// Resolves all of the paths referenced in the given response file in place.
     /// </summary>
     /// <param name="rsps">The response files.</param>
+    /// <param name="progressService">the progress service to use</param>
     /// <returns>An asynchronous task.</returns>
-    async Task ResolveInPlace(IList<ResponseFile> rsps)
+    async Task ResolveInPlace(IList<ResponseFile> rsps, IProgressService? progressService = null)
     {
+        progressService?.SetTask("Resolving File Paths");
         // Resolve any foreign paths
         for (var i = 0; i < rsps.Count; i++)
         {
@@ -130,6 +134,7 @@ public interface IInputResolver
                     )
                 }
             };
+            progressService?.SetProgress(i / (float)rsps.Count);
         }
     }
 

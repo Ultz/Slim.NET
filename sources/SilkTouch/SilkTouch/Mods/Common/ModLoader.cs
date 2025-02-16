@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Silk.NET.SilkTouch.Clang;
 
 namespace Silk.NET.SilkTouch.Mods;
@@ -29,6 +29,10 @@ public class ModLoader
             nameof(ExtractNestedTyping) => typeof(ExtractNestedTyping),
             nameof(TransformProperties) => typeof(TransformProperties),
             nameof(ClangScraper) => typeof(ClangScraper),
+            nameof(TransformInterfaces) => typeof(TransformInterfaces),
+            nameof(TransformCOM) => typeof(TransformCOM),
+            nameof(DisableWarnings) => typeof(DisableWarnings),
+            nameof(ImportManualFiles) => typeof(ImportManualFiles),
             _ => null,
         };
 }

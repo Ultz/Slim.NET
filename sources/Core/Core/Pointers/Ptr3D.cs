@@ -318,7 +318,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        public static implicit operator Ptr3D(void* ptr) => new((void***)ptr);
+        public static explicit operator Ptr3D(void* ptr) => new((void***)ptr);
 
         /// <summary>
         /// Creates a <see cref="Ptr3D"/> from a native pointer
@@ -327,7 +327,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        public static implicit operator Ptr3D(void** ptr) => new((void***)ptr);
+        public static explicit operator Ptr3D(void** ptr) => new((void***)ptr);
 
         /// <summary>
         /// Creates a <see cref="Ptr3D"/> from a native pointer
@@ -409,8 +409,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        // TODO analyzer to ensure ptr is on stack or otherwise pinned
-        public static explicit operator Ptr3D(Ref2D ptr) => (void**)ptr;
+        public static explicit operator Ptr3D(Ref2D ptr) => (Ptr3D)(void**)ptr;
 
         /// <summary>
         /// Creates a null ptr
@@ -460,6 +459,6 @@ namespace Silk.NET.Core
         /// </summary>
         /// <param name="ptr">The pointer.</param>
         /// <returns>The wrapped pointer.</returns>
-        public static implicit operator Ptr3D(Ptr2D* ptr) => (byte***)ptr;
+        public static implicit operator Ptr3D(Ptr2D* ptr) => (Ptr3D)(byte***)ptr;
     }
 }

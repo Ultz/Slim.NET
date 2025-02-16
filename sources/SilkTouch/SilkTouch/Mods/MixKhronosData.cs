@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -22,6 +22,7 @@ using Silk.NET.SilkTouch.Clang;
 using Silk.NET.SilkTouch.Mods.Metadata;
 using Silk.NET.SilkTouch.Mods.Transformation;
 using Silk.NET.SilkTouch.Naming;
+using Silk.NET.SilkTouch.Utility;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Silk.NET.SilkTouch.Mods;
@@ -48,13 +49,12 @@ public partial class MixKhronosData(
     );
     private static readonly char[] _listSeparators = { ',', '|', '+' };
 
-    private static readonly Dictionary<string, string> _defaultEnumNativeTypeNameMaps =
-        new()
-        {
-            { "GLenum", "GLEnum" },
-            { "EGLenum", "EGLEnum" },
-            { "GLbitfield", "GLEnum" }
-        };
+    private static readonly Dictionary<string, string> _defaultEnumNativeTypeNameMaps = new()
+    {
+        { "GLenum", "GLEnum" },
+        { "EGLenum", "EGLEnum" },
+        { "GLbitfield", "GLEnum" },
+    };
 
     internal class JobData
     {
@@ -184,7 +184,7 @@ public partial class MixKhronosData(
         /// <summary>
         /// Only trim Khronos/first-party extension vendor names i.e. KHR and ARB.
         /// </summary>
-        KhronosOnly
+        KhronosOnly,
     }
 
     private class ExtensionVendorTrimmingModeJsonConverter
@@ -230,7 +230,7 @@ public partial class MixKhronosData(
             Configuration = currentConfig,
             TypeMap = currentConfig.TypeMap is not null
                 ? new Dictionary<string, string>(currentConfig.TypeMap)
-                : []
+                : [],
         };
         job.TypeMap.TryAdd("int8_t", "sbyte");
         job.TypeMap.TryAdd("uint8_t", "byte");
@@ -265,7 +265,7 @@ public partial class MixKhronosData(
                 ?.Element("extensions")
                 ?.Elements("extension")
                 .Attributes("name")
-                .Select(x => x.Value.Split('_')[1].ToUpper()) ?? Enumerable.Empty<string>()
+                .Select(x => x.Value.Split('_')[1].ToUpper()) ?? Enumerable.Empty<string>(),
         ];
         job.ApiSets = apiSets;
         job.SupportedApiProfiles = supportedApiProfiles;
@@ -443,7 +443,7 @@ public partial class MixKhronosData(
                 ImpliesSets = ImpliedSets?.ToArray(),
                 MaxVersion = EndVersion?.ToString(),
                 MinVersion = StartVersion?.ToString(),
-                RequireAll = RequireAll
+                RequireAll = RequireAll,
             };
     }
 
@@ -587,7 +587,7 @@ public partial class MixKhronosData(
                         ) // <-- future proofing
                         .Where(x => x != "compatibility") // <-- assuming default "gl" is "glcompatibility"
                         .Select(x => $"{variant}{x}"),
-                    .. profileVariations.TryGetValue(variant, out var v) ? v : []
+                    .. profileVariations.TryGetValue(variant, out var v) ? v : [],
                 ];
             }
         }
@@ -709,11 +709,10 @@ public partial class MixKhronosData(
         // Create a HashSet to store all the symbols in this feature.
         // If we're not using explicit dependencies, then we track the profile-wide symbol list. We assume that the
         // "number" order is being respected.
-        var symbols = explicitDependencies
-            ? inheritance[apiSet] = []
-            : inheritance.TryGetValue(variant, out var syms)
-                ? syms
-                : inheritance[variant] = [];
+        var symbols =
+            explicitDependencies ? inheritance[apiSet] = []
+            : inheritance.TryGetValue(variant, out var syms) ? syms
+            : inheritance[variant] = [];
 
         // If we're using implicit dependencies in the form of secondary APIs, the symbol changes we explicitly need to
         // inherit are contained in the pendingChanges dictionary for this variant.
@@ -839,7 +838,7 @@ public partial class MixKhronosData(
                 // The symbol has been removed, mark it with the end version.
                 evals[idx] = evals[idx] with
                 {
-                    EndVersion = number
+                    EndVersion = number,
                 };
             }
         }
@@ -1241,7 +1240,7 @@ public partial class MixKhronosData(
 
                     job.Groups[current] = groupInfo = groupInfo with
                     {
-                        ExclusiveVendor = vendorSuffix
+                        ExclusiveVendor = vendorSuffix,
                     };
 
                     if (notSafeToTrim)
@@ -1467,16 +1466,16 @@ public partial class MixKhronosData(
     }
 
     /// <inheritdoc />
-    public void Transform(
+    public MethodDeclarationSyntax Transform(
         MethodDeclarationSyntax current,
+        bool isInInterface,
         ITransformationContext ctx,
-        Action<MethodDeclarationSyntax> next
+        Func<MethodDeclarationSyntax, bool, MethodDeclarationSyntax> next
     )
     {
         if (ctx.JobKey is null)
         {
-            next(current);
-            return;
+            return next(current, isInInterface);
         }
 
         current.AttributeLists.GetNativeFunctionInfo(out _, out var entryPoint, out _);
@@ -1484,8 +1483,10 @@ public partial class MixKhronosData(
         foreach (var meth in TransformToConstants(current, ctx, entryPoint))
         {
             // TODO more transformations
-            next(meth);
+            next(meth, isInInterface);
         }
+
+        return current;
     }
 
     private IEnumerable<MethodDeclarationSyntax> TransformToConstants(
@@ -1607,10 +1608,11 @@ public partial class MixKhronosData(
         static TypeSyntax PointerToGroupPointer(TypeSyntax original, string group) =>
             original switch
             {
-                PointerTypeSyntax ptr
-                    => ptr.WithElementType(PointerToGroupPointer(ptr.ElementType, group)),
+                PointerTypeSyntax ptr => ptr.WithElementType(
+                    PointerToGroupPointer(ptr.ElementType, group)
+                ),
                 PredefinedTypeSyntax or IdentifierNameSyntax => IdentifierName(group),
-                _ => throw new ArgumentOutOfRangeException(nameof(original))
+                _ => throw new ArgumentOutOfRangeException(nameof(original)),
             };
 
         TypeSyntax? GetTypeTransformation(
@@ -1662,7 +1664,7 @@ public partial class MixKhronosData(
                     2 when otherGroup is not null => PointerToGroupPointer(type, group),
                     1 when otherGroup is not null => PointerToGroupPointer(type, otherGroup),
                     1 => PointerToGroupPointer(type, group),
-                    _ => null
+                    _ => null,
                 };
             }
 
@@ -1938,7 +1940,7 @@ public partial class MixKhronosData(
                             Namespace =
                                 enumNamespace is not null && groupInfo.Namespace == enumNamespace
                                     ? enumNamespace
-                                    : null
+                                    : null,
                         }
                         : new EnumGroup(
                             group,

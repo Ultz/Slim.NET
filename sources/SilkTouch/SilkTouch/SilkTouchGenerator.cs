@@ -52,6 +52,8 @@ public class SilkTouchGenerator(
         CancellationToken ct = default
     )
     {
+        using var scope = logger.BeginScope("{} >", key);
+
         var sw = Stopwatch.StartNew();
         var job =
             jobConfig.Get<SilkTouchConfiguration>()
@@ -72,11 +74,15 @@ public class SilkTouchGenerator(
         var srcProj = ctx.SourceProject;
         var testProj = ctx.TestProject;
 
+        var modPerf = new Dictionary<IMod, Stopwatch>();
+
         // Initialize the mods
         foreach (var jobMod in jobMods)
         {
             logger.LogDebug("Using mod {0} for {1}", jobMod.GetType().Name, key);
+            modPerf.Add(jobMod, Stopwatch.StartNew());
             await jobMod.InitializeAsync(ctx, ct);
+            modPerf[jobMod].Stop();
             if (ctx.SourceProject != srcProj || ctx.TestProject != testProj)
             {
                 throw new InvalidOperationException(
@@ -88,11 +94,16 @@ public class SilkTouchGenerator(
         foreach (var jobMod in jobMods)
         {
             logger.LogInformation("Executing {} for {}...", jobMod.GetType().Name, key);
+            modPerf[jobMod].Start();
             await jobMod.ExecuteAsync(ctx, ct);
+            modPerf[jobMod].Stop();
         }
 
         // Manually dispose so that we don't do this when generation fails (await using is too clever).
         await ctx.DisposeAsync();
+
+        logger.LogInformation("Job Mod Performance Data for {} \n{}", key,
+            string.Join("\n", modPerf.Select(kvp => $"{kvp.Key.GetType().Name} : {kvp.Value.Elapsed.TotalSeconds} seconds")));
 
         // Output the generated bindings
         logger.LogInformation(

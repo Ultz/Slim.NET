@@ -307,7 +307,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        public static implicit operator Ptr2D(void* ptr) => new((void**)ptr);
+        public static explicit operator Ptr2D(void* ptr) => new((void**)ptr);
 
         /// <summary>
         /// Creates a <see cref="Ptr2D"/> from a native pointer
@@ -428,6 +428,6 @@ namespace Silk.NET.Core
         /// </summary>
         /// <param name="ptr">The pointer.</param>
         /// <returns>The wrapped pointer.</returns>
-        public static implicit operator Ptr2D(Ptr* ptr) => (byte*)ptr;
+        public static implicit operator Ptr2D(Ptr* ptr) => (Ptr2D)(byte**)ptr;
     }
 }

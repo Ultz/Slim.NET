@@ -4,8 +4,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-namespace Silk.NET.Windows;
+#pragma warning disable CS1589, CS0419, CA1416, CS0618
+namespace Silk.NET.Win32;
 
 /// <include file='SIGNER_PROVIDER_INFO.xml' path='doc/member[@name="SIGNER_PROVIDER_INFO"]/*'/>
 public unsafe partial struct SIGNER_PROVIDER_INFO

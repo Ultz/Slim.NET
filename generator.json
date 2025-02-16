@@ -2,33 +2,115 @@
   "Jobs": {
     "Microsoft": {
       "Solution": "Silk.NET.sln",
-      "SourceProject": "TODO.csproj",
-      "TestProject": "tests/TODO.csproj",
+      "SourceProject": "sources/Win32/Win32/Silk.NET.Win32.csproj",
+      "TestProject": "tests/Win32/Win32/Silk.NET.Win32.UnitTests.csproj",
       "DefaultLicenseHeader": "eng/silktouch/header.txt",
       "Mods": [
-        "AddIncludes",
         "ClangScraper",
-        "ChangeNamespace"
+        "ImportManualFiles",
+        "ChangeNamespace",
+        "TransformInterfaces",
+        "TransformCOM",
+        "DisableWarnings",
+        "TransformFunctions"
       ],
       "ClangScraper": {
         "ClangSharpResponseFiles": [
-          "eng/submodules/terrafx.interop.windows/generation/**/generate.rsp"
+          "eng/submodules/terrafx.interop.windows/generation/**/generate.rsp",
+          "!eng/submodules/terrafx.interop.windows/generation/DirectX/d3dx12/d3dx12_state_object/generate.rsp"
         ],
         "ManualOverrides": {
-          "sources/Windows/um/icm/Windows.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/icm/Windows.cs",
-          "sources/Gdiplus/um/gdiplustypes/GpRect.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Gdiplus/um/gdiplustypes/GpRect.cs",
-          "sources/Gdiplus/um/gdiplustypes/GpRectF.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Gdiplus/um/gdiplustypes/GpRectF.cs",
-          "sources/Gdiplus/um/gdiplustypes/GpPathData.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Gdiplus/um/gdiplustypes/GpPathData.cs"
+          "sources/Windows/um/httpserv/IHttpResponse.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/httpserv/IHttpResponse.cs",
+          "sources/Windows/um/httpserv/IHttpResponse2.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/httpserv/IHttpResponse2.cs",
+          "sources/Windows/um/httpserv/IHttpResponse3.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/httpserv/IHttpResponse3.cs",
+          "sources/Windows/um/httpserv/IHttpResponse4.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/httpserv/IHttpResponse4.cs",
+          "sources/Windows/um/httpserv/IHttpTraceContext.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/httpserv/IHttpTraceContext.cs",
+          "sources/Windows/um/httpserv/CHttpModule.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/httpserv/CHttpModule.cs",
+          "sources/Windows/um/winioctl/STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/winioctl/STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE.cs",
+          "sources/Windows/um/winioctl/TXFS_READ_BACKUP_INFORMATION_OUT.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/winioctl/TXFS_READ_BACKUP_INFORMATION_OUT.cs",
+          "sources/Windows/um/WinUser/Windows.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/um/WinUser/Windows.cs",
+          "sources/Windows/shared/strsafe/Windows.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/shared/strsafe/Windows.cs",
+          "sources/Windows/shared/ws2ipdef/Windows.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/shared/ws2ipdef/Windows.cs",
+          "sources/Windows/shared/Iprtrmib/MIB_OPAQUE_INFO.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/Windows/shared/Iprtrmib/MIB_OPAQUE_INFO.cs",
+          "sources/WinRT/winrt/windows.applicationmodel.email/IEmailMailboxSmimeEncryptionAlgorithm.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/WinRT/winrt/windows.applicationmodel.email/EmailMailboxSmimeEncryptionAlgorithm.cs",
+          "sources/WinRT/winrt/windows.applicationmodel.email/IEmailMailboxSmimeSigningAlgorithm.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/WinRT/winrt/windows.applicationmodel.email/EmailMailboxSmimeSigningAlgorithm.cs",
+          "sources/WinRT/winrt/windows.perception.spatial/ISpatialCoordinateSystem.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/WinRT/winrt/windows.perception.spatial/ISpatialCoordinateSystem.cs",
+          "sources/WinRT/winrt/windows.security.authentication.web.core/IID.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/WinRT/winrt/windows.security.authentication.web.core/IID.Manual.cs",
+          "sources/WinRT/winrt/windows.ui.input/IID.gen.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/WinRT/winrt/windows.ui.input/IID.Manual.cs"
         },
         "InputSourceRoot": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows",
         "InputTestRoot": "eng/submodules/terrafx.interop.windows/tests/Interop/Windows",
         "SkipScrapeIf": [
           "!win"
+        ],
+        "CacheOutput": false,
+        "GeneratedToRemove": [
+          "tests/DirectX/d3dx12/d3dx12_core/**.cs",
+          "tests/DirectX/d3dx12/d3dx12_barriers/**.cs"
         ]
+      },
+      "ImportManualFiles": {
+        "ManualImports": {
+          "sources/**.Manual.cs": "eng/submodules/terrafx.interop.windows/sources/Interop/Windows/**.Manual.cs",
+          "!sources/**/INativeGuid.Manual.cs": "!**/INativeGuid.Manual.cs",
+          "!sources/**/ID2D1*.Manual.cs": "!**/ID2D1*.Manual.cs",
+          "!sources/**/d2d1_1helper/DirectX.Manual.cs": "!**/d2d1_1helper/DirectX.Manual.cs",
+          "!sources/**/DirectXHelpers/DirectX.Manual.cs": "!**/DirectXHelpers/DirectX.Manual.cs",
+          "!sources/**/d2d1/DirectX.Manual.cs": "!**/d2d1/DirectX.Manual.cs",
+          "!sources/**/IWeakReference.Manual.cs": "!**/IWeakReference.Manual.cs",
+          "!sources/**/IDispatchEx.Manual.cs": "!**/IDispatchEx.Manual.cs",
+          "!sources/**/CD3DX12_PIPELINE_STATE_STREAM_PARSE_HELPER.Manual.cs": "!**/CD3DX12_PIPELINE_STATE_STREAM_PARSE_HELPER.Manual.cs",
+          "!sources/**/CD3DX12_PIPELINE_STATE_STREAM1_PARSE_HELPER.Manual.cs": "!**/CD3DX12_PIPELINE_STATE_STREAM1_PARSE_HELPER.Manual.cs",
+          "!sources/**/CD3DX12_PIPELINE_STATE_STREAM2_PARSE_HELPER.Manual.cs": "!**/CD3DX12_PIPELINE_STATE_STREAM2_PARSE_HELPER.Manual.cs",
+          "!sources/**/CD3DX12_PIPELINE_STATE_STREAM3_PARSE_HELPER.Manual.cs": "!**/CD3DX12_PIPELINE_STATE_STREAM3_PARSE_HELPER.Manual.cs",
+          "!sources/**/CD3DX12_PIPELINE_STATE_STREAM4_PARSE_HELPER.Manual.cs": "!**/CD3DX12_PIPELINE_STATE_STREAM4_PARSE_HELPER.Manual.cs",
+          "!sources/**/CD3DX12_PIPELINE_STATE_STREAM5_PARSE_HELPER.Manual.cs": "!**/CD3DX12_PIPELINE_STATE_STREAM5_PARSE_HELPER.Manual.cs",
+          "!sources/**/ShObjIdl_core/Windows.Manual.cs": "!**/ShObjIdl_core/Windows.Manual.cs",
+          "!sources/**/propvarutil/Windows.Manual.cs": "!**/propvarutil/Windows.Manual.cs",
+          "!sources/**/uuids/Windows.Manual.cs": "!**/uuids/Windows.Manual.cs",
+          "!sources/**/gdipluscolor/Color.Manual.cs": "!**/gdipluscolor/Color.Manual.cs",
+          "!sources/**/windows.ui.input/IID.Manual.cs": "!**/windows.ui.input/IID.Manual.cs",
+          "!sources/**/windows.security.authentication.web.core/IID.Manual.cs": "!**/windows.security.authentication.web.core/IID.Manual.cs",
+          "!sources/**/roapi/WinRT.Manual.cs": "!**/roapi/WinRT.Manual.cs",
+          "!sources/**/windows.graphics.directx.direct3d11.interop/WinRT.Manual.cs": "!**/windows.graphics.directx.direct3d11.interop/WinRT.Manual.cs",
+          "!sources/**/roparameterizediid/**.Manual.cs": "!**/roparameterizediid/**.Manual.cs",
+          "!sources/**/d2d1_1/D2D1_**.Manual.cs": "!**/d2d1_1/D2D1_**.Manual.cs"
+        }
       },
       "ChangeNamespace": {
         "Mappings": {
-          "TerraFX.Interop.(.*)": "Silk.NET.$1"
+          "TerraFX.Interop.Windows(.*)": "Silk.NET.Win32$1",
+          "TerraFX.Interop(?!.Windows)(.*)": "Silk.NET$1"
+        }
+      },
+      "TransformInterfaces": {
+        "AdditionalInterfaces": [
+          "IDispatchEx"
+        ]
+      },
+      "TransformCOM": {
+        "BaseTypes": {
+          "IUnknown.Native.Interface": "Silk.NET.Win32.IUnknown.Native.Interface"
+        },
+        "AdditionalCOMTypes": {
+          "IDispatchEx.Native.Interface": {
+            "Namespace": "Silk.NET.Win32",
+            "Parent": "IDispatch.Native.Interface"
+
+          }
+        }
+      },
+      "DisableWarnings": {
+        "WarningCodes": [
+          "CS1589", //XML Comments missing (due to missing docs)
+          "CS0419", //Inheritdoc issue (due to bug)
+          "CA1416", //Function available outside of target os (intended)
+          "CS0618" //Obsolete Warnings (intended)
+        ]
+      },
+      "TransformFunctions": {
+        "BoolTypes": {
+          "BOOL": null
         }
       }
     },

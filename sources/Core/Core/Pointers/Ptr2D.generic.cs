@@ -444,7 +444,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        public static implicit operator Ptr2D<T>(void* ptr) => new((Ptr<T>*)ptr);
+        public static explicit operator Ptr2D<T>(void* ptr) => new((Ptr<T>*)ptr);
 
         /// <summary>
         /// Creates a native pointer from a <see cref="Ptr2D{T}"/>

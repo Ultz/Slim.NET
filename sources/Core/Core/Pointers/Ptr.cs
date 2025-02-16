@@ -223,6 +223,24 @@ namespace Silk.NET.Core
         public static implicit operator void*(Ptr ptr) => ptr.Native;
 
         /// <summary>
+        /// Creates a <see cref="nuint"/> from a <see cref="Ptr"/>
+        /// </summary>
+        /// <param name="ptr">the pointer</param>
+        [MethodImpl(
+            MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
+        )]
+        public static explicit operator nuint(Ptr ptr) => new(ptr.Native);
+
+        /// <summary>
+        /// Creates a <see cref="Ptr"/> from a <see cref="nuint"/>
+        /// </summary>
+        /// <param name="ptr">the integer</param>
+        [MethodImpl(
+            MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
+        )]
+        public static explicit operator Ptr(nuint ptr) => new(ptr.ToPointer());
+
+        /// <summary>
         /// Creates a <see cref="Ref"/> from a <see cref="Ptr"/>
         /// </summary>
         /// <param name="ptr"></param>

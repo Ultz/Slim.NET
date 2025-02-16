@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -11,6 +11,8 @@ using System.Text;
 using ClangSharp;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Logging;
+using Silk.NET.SilkTouch.Logging;
+using Silk.NET.SilkTouch.Utility;
 using static ClangSharp.Interop.CXTranslationUnit_Flags;
 
 namespace Silk.NET.SilkTouch.Clang;
@@ -19,7 +21,7 @@ namespace Silk.NET.SilkTouch.Clang;
 /// Reads a response file (rsp) containing ClangSharpPInvokeGenerator command line arguments.
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
-public class ResponseFileHandler(ILogger<ResponseFileHandler> logger)
+public class ResponseFileHandler(ILogger<ResponseFileHandler> logger, IProgressService progressService)
 {
     // Begin verbatim ClangSharp code
     private static readonly string[] s_additionalOptionAliases = ["--additional", "-a"];
@@ -1492,13 +1494,20 @@ public class ResponseFileHandler(ILogger<ResponseFileHandler> logger)
             directory,
             Environment.CurrentDirectory
         );
-        foreach (var rsp in Glob(globs))
+        IEnumerable<string> rsps = Glob(globs);
+        int index = 0;
+        int count = rsps.Count();
+        progressService.SetTask("Reading ResponseFiles");
+        foreach (var rsp in rsps)
         {
+            index++;
             logger.LogDebug("Reading found file: {0}", rsp);
             var dir =
                 Path.GetDirectoryName(rsp)
                 ?? throw new InvalidOperationException("Couldn't get directory name of path");
             var read = ReadResponseFile(RspRelativeTo(dir, rsp).ToArray(), dir, rsp);
+
+            progressService.SetProgress(index / (float)count);
             yield return read with
             {
                 FileDirectory = dir,
@@ -1532,24 +1541,20 @@ public class ResponseFileHandler(ILogger<ResponseFileHandler> logger)
         }
     }
 
+    internal static string PathFixup(string path)
+    {
+        if (Path.IsPathFullyQualified(path))
+        {
+            path = Path.GetRelativePath(Path.GetPathRoot(path)!, path);
+        }
+
+        return path.Replace('\\', '/');
+    }
+
     internal static IEnumerable<string> Glob(IReadOnlyCollection<string> paths, string? cd = null)
     {
         cd ??= Environment.CurrentDirectory;
-        var matcher = new Matcher();
-        static string PathFixup(string path)
-        {
-            if (Path.IsPathFullyQualified(path))
-            {
-                path = Path.GetRelativePath(Path.GetPathRoot(path)!, path);
-            }
-
-            return path.Replace('\\', '/');
-        }
-
-        matcher.AddIncludePatterns(paths.Where(x => !x.StartsWith("!")).Select(PathFixup));
-        matcher.AddExcludePatterns(
-            paths.Where(x => x.StartsWith("!")).Select(x => x[1..]).Select(PathFixup)
-        );
+        var matcher = GetGlobMatcher(paths);
 
         return matcher
             .GetResultsInFullPath(cd)
@@ -1566,5 +1571,17 @@ public class ResponseFileHandler(ILogger<ResponseFileHandler> logger)
             .Select(x => Path.GetFullPath(x).Replace('\\', '/'))
             .Distinct()
             .ToArray();
+    }
+
+    internal static Matcher GetGlobMatcher(IReadOnlyCollection<string> paths)
+    {
+        var matcher = new Matcher();
+
+        matcher.AddIncludePatterns(paths.Where(x => !x.StartsWith("!")).Select(PathFixup));
+        matcher.AddExcludePatterns(
+            paths.Where(x => x.StartsWith("!")).Select(x => x[1..]).Select(PathFixup)
+        );
+
+        return matcher;
     }
 }

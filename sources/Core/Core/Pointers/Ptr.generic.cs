@@ -311,6 +311,43 @@ namespace Silk.NET.Core
         /// <param name="ptr"></param>
         public static implicit operator T*(Ptr<T> ptr) => ptr.Native;
 
+
+        /// <summary>
+        /// Creates a <see cref="nuint"/> from a <see cref="Ptr{T}"/>
+        /// </summary>
+        /// <param name="ptr"></param>
+        [MethodImpl(
+            MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
+        )]
+        public static implicit operator nuint(Ptr<T> ptr) => new(ptr.Native);
+
+        /// <summary>
+        /// Creates a <see cref="Ptr"/> from a <see cref="nuint"/>
+        /// </summary>
+        /// <param name="ptr"></param>
+        [MethodImpl(
+            MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
+        )]
+        public static implicit operator Ptr<T>(nuint ptr) => new((T*)ptr.ToPointer());
+
+        /// <summary>
+        /// Creates a <see cref="nint"/> from a <see cref="Ptr{T}"/>
+        /// </summary>
+        /// <param name="ptr"></param>
+        [MethodImpl(
+            MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
+        )]
+        public static implicit operator nint(Ptr<T> ptr) => new(ptr.Native);
+
+        /// <summary>
+        /// Creates a <see cref="Ptr{T}"/> from a <see cref="nint"/>
+        /// </summary>
+        /// <param name="ptr"></param>
+        [MethodImpl(
+            MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
+        )]
+        public static implicit operator Ptr<T>(nint ptr) => new((T*)ptr.ToPointer());
+
         /// <summary>
         /// Creates a <see cref="Ref{T}"/> from a <see cref="Ptr{T}"/>
         /// </summary>

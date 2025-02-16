@@ -198,9 +198,9 @@ public class ArrayParameterTransformerTests
         var og =
             SyntaxFactory.ParseMemberDeclaration(originalMethod) as MethodDeclarationSyntax
             ?? throw new InvalidOperationException("failed to cast original");
-        var uut = new ArrayParameterTransformer();
+        var uut = new ArrayParameterTransformer(null);
         var result = og;
-        uut.Transform(og, new TestApiMetadata { Original = og }, x => result = x);
+        uut.Transform(og, false, new TestApiMetadata { Original = og }, (x, isInInterface) => result = x);
         Assert.That(
             result.NormalizeWhitespace().ToFullString().ReplaceLineEndings(),
             Is.EqualTo(expectedMethod.ReplaceLineEndings())
@@ -214,10 +214,11 @@ public class ArrayParameterTransformerTests
     {
         public TestApiMetadata() => Transformers = [this];
 
-        public void Transform(
+        public MethodDeclarationSyntax Transform(
             MethodDeclarationSyntax current,
+            bool isInInterface,
             ITransformationContext ctx,
-            Action<MethodDeclarationSyntax> next
+            Func<MethodDeclarationSyntax, bool, MethodDeclarationSyntax> next
         ) => throw new NotImplementedException();
 
         public string? JobKey { get; set; }

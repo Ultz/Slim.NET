@@ -1,7 +1,7 @@
 // Copyright © Tanner Gooding and Contributors. Licensed under the MIT License (MIT). See License.md in the repository root for more information.
 using System;
-
-namespace Silk.NET.Windows;
+#pragma warning disable CS1589, CS0419, CA1416, CS0618
+namespace Silk.NET.Win32;
 
 public readonly partial struct BOOL : IComparable, IComparable<BOOL>, IEquatable<BOOL>, IFormattable
 {
@@ -86,9 +86,15 @@ public readonly partial struct BOOL : IComparable, IComparable<BOOL>, IEquatable
 
     public int CompareTo(BOOL other) => Value.CompareTo(other.Value);
 
+    [Transformed]
+    public int CompareTo(MaybeBool<BOOL> other) => (int)CompareTo((BOOL)other);
+
     public override bool Equals(object? obj) => (obj is BOOL other) && Equals(other);
 
     public bool Equals(BOOL other) => Value.Equals(other.Value);
+
+    [Transformed]
+    public bool Equals(MaybeBool<BOOL> other) => (bool)Equals((BOOL)other);
 
     public override int GetHashCode() => Value.GetHashCode();
 

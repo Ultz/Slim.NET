@@ -14,15 +14,18 @@ public interface IFunctionTransformer
     /// that it is required that all transformers can detect when the function has already been transformed
     /// </summary>
     /// <param name="current">The inner function implementation.</param>
+    /// <param name="isInInterface">is this function in an interface</param>
     /// <param name="ctx">The wider context for the function transformation operation.</param>
     /// <param name="next">The callback for the outer function produced by this transformer.</param>
     /// <remarks>
     /// <paramref name="next"/> can be called multiple times for the same input. This can be used to generate
     /// transformative overloads for a function.
     /// </remarks>
-    void Transform(
+    /// <returns>the transformed function</returns>
+    MethodDeclarationSyntax Transform(
         MethodDeclarationSyntax current,
+        bool isInInterface,
         ITransformationContext ctx,
-        Action<MethodDeclarationSyntax> next
+        Func<MethodDeclarationSyntax, bool, MethodDeclarationSyntax> next
     );
 }

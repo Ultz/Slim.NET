@@ -443,7 +443,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        public static implicit operator Ptr3D<T>(void* ptr) => new((Ptr2D<T>*)ptr);
+        public static explicit operator Ptr3D<T>(void* ptr) => new((Ptr2D<T>*)ptr);
 
         /// <summary>
         /// Creates a native pointer from a <see cref="Ptr3D{T}"/>
@@ -461,7 +461,7 @@ namespace Silk.NET.Core
         [MethodImpl(
             MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization
         )]
-        public static implicit operator Ptr3D<T>(void** ptr) => new((Ptr2D<T>*)ptr);
+        public static explicit operator Ptr3D<T>(void** ptr) => new((Ptr2D<T>*)ptr);
 
         /// <summary>
         /// Creates a native pointer from a <see cref="Ptr3D{T}"/>

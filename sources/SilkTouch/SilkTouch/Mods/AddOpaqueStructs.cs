@@ -72,11 +72,10 @@ public class AddOpaqueStructs(
         {
             var qualified = name.LastIndexOf('.');
             var ns =
-                qualified != -1
-                    ? ModUtils.NamespaceIntoIdentifierName(name.AsSpan()[..qualified])
-                    : _defaultNamespaces.TryGetValue(ctx.JobKey, out var def)
-                        ? ModUtils.NamespaceIntoIdentifierName(def)
-                        : null;
+                qualified != -1 ? ModUtils.NamespaceIntoIdentifierName(name.AsSpan()[..qualified])
+                : _defaultNamespaces.TryGetValue(ctx.JobKey, out var def)
+                    ? ModUtils.NamespaceIntoIdentifierName(def)
+                : null;
             if (ns is null)
             {
                 logger.LogWarning(

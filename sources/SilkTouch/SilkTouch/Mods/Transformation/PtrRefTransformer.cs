@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Silk.NET.SilkTouch.Mods.Transformation;
@@ -20,25 +21,31 @@ public sealed partial class PtrRefTransformer()
 {
     private const int MaxIndirections = 3;
     private ThreadLocal<ITransformationContext?> _ctx = new();
+    private bool isInInterface = false;
 
     /// <inheritdoc />
-    public void Transform(
+    public MethodDeclarationSyntax Transform(
         MethodDeclarationSyntax current,
+        bool isInInterface,
         ITransformationContext ctx,
-        Action<MethodDeclarationSyntax> next
+        Func<MethodDeclarationSyntax, bool, MethodDeclarationSyntax> next
     )
     {
+        this.isInInterface = isInInterface;
         _ctx.Value = ctx;
+        MethodDeclarationSyntax ret;
         if (Visit(current) is MethodDeclarationSyntax modded)
         {
-            next(modded);
+            ret = next(modded, isInInterface);
         }
         else
         {
-            next(current);
+            ret = next(current, isInInterface);
         }
 
         _ctx.Value = null;
+        isInInterface = false;
+        return ret;
     }
 
     private static bool ShouldConvertToDSL(TypeSyntax syn) =>
@@ -167,7 +174,7 @@ public sealed partial class PtrRefTransformer()
 
         // Defensive check, the transformer should always make the initial body for us.
         var body = methWithReplacementsButNoFixed.Body;
-        if (body is null)
+        if (body is null && !isInInterface)
         {
             _parameterIdentifiers = null;
             return node;
@@ -182,8 +189,40 @@ public sealed partial class PtrRefTransformer()
                     )
                 )
             )
+            .WithAttributeLists(
+                List(
+                    methWithReplacementsButNoFixed
+                        .AttributeLists.Select(x =>
+                            x.WithAttributes(
+                                SeparatedList(
+                                    x.Attributes.Where(y =>
+                                        !y.IsAttribute(
+                                            "System.Runtime.InteropServices.UnmanagedCallersOnly"
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                        .Where(x => x.Attributes.Count > 0)
+                )
+            )
             .AddMaxOpt();
         _ctx.Value?.AddUsing("System.Runtime.CompilerServices");
+
+        // Need to check on the return type, but assume that there's an implicit conversion in the DSL
+        if (_returnTypeReplaceable)
+        {
+            _returnTypeReplaceable = false;
+            methWithReplacementsButNoFixed = methWithReplacementsButNoFixed.WithReturnType(
+                GetDSLType(node.ReturnType, node.AttributeLists, SyntaxKind.ReturnKeyword)
+            );
+        }
+
+        if (isInInterface)
+        {
+            _parameterIdentifiers = null;
+            return methWithReplacementsButNoFixed;
+        }
 
         // Generate the fixed blocks for the "inner idents"
         foreach (var param in paramsToChange)
@@ -197,7 +236,7 @@ public sealed partial class PtrRefTransformer()
                 continue;
             }
 
-            body = body.WithStatements(
+            body = body!.WithStatements(
                 SingletonList<StatementSyntax>(
                     body.Statements.AddFixed(s =>
                         FixedStatement(
@@ -219,15 +258,6 @@ public sealed partial class PtrRefTransformer()
 
         _parameterIdentifiers = null;
 
-        // Need to check on the return type, but assume that there's an implicit conversion in the DSL
-        if (_returnTypeReplaceable)
-        {
-            _returnTypeReplaceable = false;
-            methWithReplacementsButNoFixed = methWithReplacementsButNoFixed.WithReturnType(
-                GetDSLType(node.ReturnType, node.AttributeLists, SyntaxKind.ReturnKeyword)
-            );
-        }
-
         return methWithReplacementsButNoFixed.WithBody(body);
     }
 
@@ -245,7 +275,14 @@ public sealed partial class PtrRefTransformer()
             // Are we converting *to* a DSL type?
             if (toDsl)
             {
-                return ret.WithType(GetDSLType(ret.Type, node.AttributeLists, null));
+                return ret.WithType(GetDSLType(ret.Type, node.AttributeLists, null))
+                    .WithDefault(
+                        node.Default is not null && node.Default.Value.ToString() == "null"
+                            ? EqualsValueClause(
+                                LiteralExpression(SyntaxKind.DefaultLiteralExpression)
+                            )
+                            : node.Default
+                    );
             }
 
             // Are we converting *from* a DSL type?
@@ -286,7 +323,7 @@ public sealed partial class PtrRefTransformer()
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var ret = base.VisitIdentifierName(node) as IdentifierNameSyntax;
-        if (ret is null)
+        if (ret is null || ret.Parent is InvocationExpressionSyntax)
         {
             return ret;
         }

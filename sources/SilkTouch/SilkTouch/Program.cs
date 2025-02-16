@@ -12,14 +12,23 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Silk.NET.SilkTouch;
 using Silk.NET.SilkTouch.Caching;
+using Silk.NET.SilkTouch.Logging;
+using Silk.NET.SilkTouch.Utility;
 
 var logging = new Option<LogLevel>(new[] { "--log-level", "-l" }, () => LogLevel.Information);
 var skip = new Option<string[]>(
     new[] { "--skip", "-s" },
     Array.Empty<string>,
-    "A list of job names to skip."
+    "A list of job names to skip. Takes precendence over --only."
 )
 {
+    Arity = ArgumentArity.ZeroOrMore
+};
+var only = new Option<string[]>(
+    new[] { "--only", "-o" },
+    Array.Empty<string>,
+    "A list of job names to run."
+) {
     Arity = ArgumentArity.ZeroOrMore
 };
 var configs = new Argument<string[]>("configs", "Path(s) to JSON SilkTouch configuration(s)")
@@ -39,9 +48,8 @@ var jobs = new Option<int>(
     () => Environment.ProcessorCount,
     "Maximum number of parallel ClangSharp executions."
 );
-var rootCommand = new RootCommand { logging, skip, configs, configOverrides, jobs };
-rootCommand.SetHandler(async ctx =>
-{
+var rootCommand = new RootCommand { logging, skip, only, configs, configOverrides, jobs };
+rootCommand.SetHandler(async ctx => {
     // Create the ConfigurationBuilder with support for env var & command line overrides
     var cb = new ConfigurationBuilder()
         .AddEnvironmentVariables(source => source.Prefix = "SILKDOTNET_")
@@ -62,35 +70,55 @@ rootCommand.SetHandler(async ctx =>
     // Register MSBuild
     MSBuildLocator.RegisterDefaults();
 
+    JobContext jobContext = new();
+
     var sp = new ServiceCollection()
-        .AddLogging(builder =>
-        {
-            builder.AddSimpleConsole(opts =>
-            {
+        .AddSingleton(jobContext)
+        .AddSingleton<IProgressService, ProgressService>()
+        .AddLogging(builder => {
+            builder.ClearProviders();
+            builder.AddSimpleConsole(opts => {
                 opts.SingleLine = true;
                 opts.ColorBehavior = Console.IsOutputRedirected
                     ? LoggerColorBehavior.Disabled
                     : LoggerColorBehavior.Default;
-                opts.IncludeScopes = false;
+                opts.IncludeScopes = true;
             });
+
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+            });
+
             builder.SetMinimumLevel(ctx.ParseResult.GetValueForOption(logging));
+
+            builder.Services.AddSingleton(typeof(ILogger<>), typeof(SilkLogger<>));
         })
+        .AddSingleton<ConsoleRenderer>()
         .AddOptions()
         .AddSilkTouch(config)
         .BuildServiceProvider();
 
+    // Start the console renderer
+    var consoleRenderer = sp.GetService<ConsoleRenderer>();
+
     var logger = sp.GetRequiredService<ILogger<Program>>();
-    var skipped = ctx.ParseResult.GetValueForOption(skip);
+    var skipped = SeparateCSV(ctx.ParseResult.GetValueForOption(skip));
+    var jobsToRun = SeparateCSV(ctx.ParseResult.GetValueForOption(only));
+
     var generator = sp.GetRequiredService<SilkTouchGenerator>();
+    var progressService = sp.GetRequiredService<IProgressService>();
+
     await Parallel.ForEachAsync(
         config
             .GetSection("Jobs")
             .GetChildren()
             .Where(x =>
-                skipped?.All(y => !x.Key.Equals(y, StringComparison.OrdinalIgnoreCase)) ?? true
+                (skipped?.All(y => !x.Key.Equals(y, StringComparison.OrdinalIgnoreCase)) ?? true) &&
+                (jobsToRun is null || jobsToRun.Count == 0 || jobsToRun.Any(y => x.Key.Equals(y, StringComparison.OrdinalIgnoreCase)))
             ),
-        async (job, ct) =>
-        {
+        async (job, ct) => {
+            jobContext.JobKey = job.Key;
             await generator.RunAsync(
                 job.Key,
                 job,
@@ -98,10 +126,35 @@ rootCommand.SetHandler(async ctx =>
                 // ctx.ParseResult.GetValueForOption(jobs),
                 ct
             );
+            progressService.RemoveProgress();
         }
     );
+
+    // Stop the renderer gracefully
+    consoleRenderer?.Stop();
+
     // workaround for dangling logging/socket engine threads
     Environment.Exit(0);
 });
 
 await rootCommand.InvokeAsync(args);
+
+static List<string> SeparateCSV(Span<string> strs)
+{
+    if (strs.Length == 0)
+        return [];
+
+    List<string> result = [];
+    foreach (string str in strs)
+    {
+        if (str.Contains(','))
+        {
+            result.AddRange(str.Split(','));
+        }
+        else
+        {
+            result.Add(str);
+        }
+    }
+    return result;
+}

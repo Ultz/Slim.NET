@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\sources\Win32\Win32\Silk.NET.Win32.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="..\..\..\sources\Core\Core\Silk.NET.Core.cs">
+        <Link>Silk.NET.Core.cs</Link>
+      </Compile>
+    </ItemGroup>
+
+</Project>

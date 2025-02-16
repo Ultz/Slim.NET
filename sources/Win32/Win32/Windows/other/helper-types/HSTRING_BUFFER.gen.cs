@@ -1,7 +1,7 @@
 // Copyright © Tanner Gooding and Contributors. Licensed under the MIT License (MIT). See License.md in the repository root for more information.
 using System;
-using Silk.NET.Windows;
-
+using Silk.NET.Win32;
+#pragma warning disable CS1589, CS0419, CA1416, CS0618
 namespace Silk.NET.WinRT;
 
 public readonly unsafe partial struct HSTRING_BUFFER
