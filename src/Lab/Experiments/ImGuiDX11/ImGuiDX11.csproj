@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>12</LangVersion>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\Core\Silk.NET.Core\Silk.NET.Core.csproj" />
+        <ProjectReference Include="..\..\..\Maths\Silk.NET.Maths\Silk.NET.Maths.csproj" />
+        <ProjectReference Include="..\..\..\Microsoft\Silk.NET.Direct3D11\Silk.NET.Direct3D11.csproj" />
+        <ProjectReference Include="..\..\..\Microsoft\Silk.NET.Direct3D.Compilers\Silk.NET.Direct3D.Compilers.csproj" />
+        <ProjectReference Include="..\..\..\Microsoft\Silk.NET.DXGI\Silk.NET.DXGI.csproj" />
+        <ProjectReference Include="..\..\..\Input\Silk.NET.Input\Silk.NET.Input.csproj" />
+        <ProjectReference Include="..\..\..\Windowing\Silk.NET.Windowing.Common\Silk.NET.Windowing.Common.csproj" />
+        <PackageReference Include="ImGui.NET" Version="1.90.8.1" />
+    </ItemGroup>
+
+    <Import Project="..\..\..\..\build\props\common.props" />
+</Project>
